@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: b549dc0e9f8188244b602ccaeff0110a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - clipUp: {fileID: 8300000, guid: 72dbfc2fa8c38c545aa5625ee7170cd4, type: 3}
+  - clipDown: {fileID: 8300000, guid: 5a1a96f5db77ae94eaf9081c07e94eef, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
