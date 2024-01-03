@@ -6,26 +6,27 @@ using UnityEngine;
 namespace LobbyManage
 {
     public class MainLobbyScreen : MonoBehaviour {
-        [SerializeField] private LobbyRoomPanel _lobbyPanelPrefab;
-        [SerializeField] private Transform _lobbyParent;
-        [SerializeField] private GameObject _noLobbiesText;
-        [SerializeField] private float _lobbyRefreshRate = 2;
+        [SerializeField] private LobbyRoomPanel lobbyPanelPrefab;
+        [SerializeField] private Transform lobbyParent;
+        [SerializeField] private GameObject noLobbiesText;
+        [SerializeField] private float lobbyRefreshRate = 2;
 
         private readonly List<LobbyRoomPanel> _currentLobbySpawns = new();
         private float _nextRefreshTime;
 
-        private void Update() {
-            if (Time.time >= _nextRefreshTime) FetchLobbies();
-        }
-
         private void OnEnable() {
-            foreach (Transform child in _lobbyParent) Destroy(child.gameObject);
+            foreach (Transform child in lobbyParent) Destroy(child.gameObject);
             _currentLobbySpawns.Clear();
         }
+        private void Update() {
+            if (Time.time >= _nextRefreshTime) 
+                FetchLobbies();
+        }
+
 
         private async void FetchLobbies() {
             try {
-                _nextRefreshTime = Time.time + _lobbyRefreshRate;
+                _nextRefreshTime = Time.time + lobbyRefreshRate;
 
                 // Grab all current lobbies
                 var allLobbies = await MatchmakingService.GatherLobbies();
@@ -47,13 +48,13 @@ namespace LobbyManage
                         current.UpdateDetails(lobby);
                     }
                     else {
-                        var panel = Instantiate(_lobbyPanelPrefab, _lobbyParent);
+                        var panel = Instantiate(lobbyPanelPrefab, lobbyParent);
                         panel.Init(lobby);
                         _currentLobbySpawns.Add(panel);
                     }
                 }
 
-                _noLobbiesText.SetActive(!_currentLobbySpawns.Any());
+                noLobbiesText.SetActive(!_currentLobbySpawns.Any());
             }
             catch (Exception e) {
                 Debug.LogError(e);

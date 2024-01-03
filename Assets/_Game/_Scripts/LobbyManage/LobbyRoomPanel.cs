@@ -15,22 +15,23 @@ namespace LobbyManage
         public static event Action<InGameLobby> LobbySelected;
 
         public void Init(InGameLobby lobby) {
-            UpdateDetails(lobby);
+            if(!lobby.IsPrivate)
+                UpdateDetails(lobby);
         }
 
         public void UpdateDetails(InGameLobby lobby) {
             Lobby = lobby;
             _nameText.text = lobby.Name;
-            _typeText.text = Constants.GameTypes[GetValue(Constants.GameTypeKey)];
+            //_typeText.text = Constants.GameTypes[GetValue(Constants.GameRoomKey)];
 
-            var point = Mathf.InverseLerp(0, Constants.Difficulties.Count - 1, GetValue(Constants.DifficultyKey));
-            _difficultyMeter.transform.rotation = Quaternion.Euler(0, 0, Mathf.Lerp(_difficultyDialMaxAngle, -_difficultyDialMaxAngle, point));
+            //var point = Mathf.InverseLerp(0, Constants.Difficulties.Count - 1, GetValue(Constants.VisibilityKey));
+            //_difficultyMeter.transform.rotation = Quaternion.Euler(0, 0, Mathf.Lerp(_difficultyDialMaxAngle, -_difficultyDialMaxAngle, point));
 
             _playerCountText.text = $"{lobby.Players.Count}/{lobby.MaxPlayers}";
 
-            int GetValue(string key) {
-                return int.Parse(lobby.Data[key].Value);
-            }
+            // int GetValue(string key) {
+            //     return int.Parse(lobby.Data[key].Value);
+            // }
         }
 
         public void Clicked() {

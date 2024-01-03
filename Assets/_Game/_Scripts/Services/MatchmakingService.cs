@@ -11,20 +11,22 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 public static class MatchmakingService {
+    public static event Action<Lobby> CurrentLobbyRefreshed;
+    
+    private static CancellationTokenSource _heartbeatSource, _updateLobbySource;
+    private static UnityTransport _transport;
+    private static Lobby _currentLobby;
+    
     private const int HeartbeatInterval = 15;
     private const int LobbyRefreshRate = 2; // Rate limits at 2
 
-    private static UnityTransport _transport;
 
-    private static Unity.Services.Lobbies.Models.Lobby _currentLobby;
-    private static CancellationTokenSource _heartbeatSource, _updateLobbySource;
 
     private static UnityTransport Transport {
         get => _transport != null ? _transport : _transport = Object.FindObjectOfType<UnityTransport>();
         set => _transport = value;
     }
 
-    public static event Action<Lobby> CurrentLobbyRefreshed;
 
     public static void ResetStatics() {
         if (Transport != null) {
@@ -58,17 +60,16 @@ public static class MatchmakingService {
 
         // Create a lobby, adding the relay join code to the lobby data
         var options = new CreateLobbyOptions {
+            IsPrivate = !data.Visibility,
+            Password = !data.Visibility ? data.roomPass : "00000000",
             Data = new Dictionary<string, DataObject> {
-                { Constants.JoinKey, new DataObject(DataObject.VisibilityOptions.Member, joinCode) },
-                { Constants.GameTypeKey, new DataObject(DataObject.VisibilityOptions.Public, data.Type.ToString(), DataObject.IndexOptions.N1) }, {
-                    Constants.DifficultyKey,
-                    new DataObject(DataObject.VisibilityOptions.Public, data.Difficulty.ToString(), DataObject.IndexOptions.N2)
-                }
+                { Constants.JoinKey, new DataObject(DataObject.VisibilityOptions.Member, joinCode) }
+                //{ Constants.VisibilityKey, new DataObject(DataObject.VisibilityOptions.Public, "true", DataObject.IndexOptions.N1)},
+                //{ Constants.GameRoomKey, new DataObject(DataObject.VisibilityOptions.Public, data.roomPass, DataObject.IndexOptions.N2) }
             }
         };
 
         _currentLobby = await Lobbies.Instance.CreateLobbyAsync(data.Name, data.MaxPlayers, options);
-
         Transport.SetHostRelayData(a.RelayServer.IpV4, (ushort)a.RelayServer.Port, a.AllocationIdBytes, a.Key, a.ConnectionData);
 
         Heartbeat();

@@ -1,32 +1,52 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LobbyManage
 {
     public class CreateLobbyScreen : MonoBehaviour {
-        [SerializeField] private TMP_InputField _nameInput, _maxPlayersInput;
-        [SerializeField] private TMP_Dropdown _typeDropdown, _difficultyDropdown;
-
+        public static event Action<LobbyData> LobbyCreated;
+        
+        [SerializeField] private TMP_InputField _nameInput, _maxPlayersInput, passInput;
+        //[SerializeField] private TMP_Dropdown _typeDropdown, _difficultyDropdown;
+        [SerializeField] private Toggle visibility;
+        [SerializeField] private Button createLobby;
         private void Start() {
-            SetOptions(_typeDropdown, Constants.GameTypes);
-            SetOptions(_difficultyDropdown, Constants.Difficulties);
+            visibility.onValueChanged.AddListener(ChangeVisibility);
+            passInput.onValueChanged.AddListener(CharacterLengthCheck);
+        }
 
-            void SetOptions(TMP_Dropdown dropdown, IEnumerable<string> values) {
-                dropdown.options = values.Select(type => new TMP_Dropdown.OptionData { text = type }).ToList();
+        private void CharacterLengthCheck(string passLenght)
+        {
+            if (!visibility.isOn)
+            {
+                createLobby.gameObject.SetActive(passLenght.Length >= 8);
             }
         }
 
-        public static event Action<LobbyData> LobbyCreated;
+        private void ChangeVisibility(bool action)
+        {
+            if (!action)
+            {
+                passInput.transform.parent.gameObject.SetActive(true);
+                createLobby.gameObject.SetActive(false);
+            }
+            else
+            {
+                createLobby.gameObject.SetActive(true);
+                passInput.transform.parent.gameObject.SetActive(false);
+                passInput.text = "";
+            }
+        }
+
 
         public void OnCreateClicked() {
             var lobbyData = new LobbyData {
                 Name = _nameInput.text,
                 MaxPlayers = int.Parse(_maxPlayersInput.text),
-                Difficulty = _difficultyDropdown.value,
-                Type = _typeDropdown.value
+                Visibility = visibility.isOn,
+                roomPass = passInput.text
             };
 
             LobbyCreated?.Invoke(lobbyData);
@@ -36,7 +56,7 @@ namespace LobbyManage
     public struct LobbyData {
         public string Name;
         public int MaxPlayers;
-        public int Difficulty;
-        public int Type;
+        public bool Visibility;
+        public string roomPass;
     }
 }

@@ -27,7 +27,7 @@ public class LobbyOrchestrator : NetworkBehaviour {
         LobbyRoomPanel.LobbySelected += OnLobbySelected;
         RoomScreen.LobbyLeft += OnLobbyLeft;
         RoomScreen.StartPressed += OnGameStart;
-        
+        JoinRoomPanel.JoinPrivateLobby += OnLobbySelected;
         NetworkObject.DestroyWithScene = true;
     }
 
