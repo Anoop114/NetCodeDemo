@@ -1,11 +1,15 @@
+using Managers;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Player
 {
-    public class PlayerController : NetworkBehaviour {
+    public class PlayerController : NetworkBehaviour 
+    {
+        
         [SerializeField] private float speed = 30;
+
+        [SerializeField] private MeshRenderer meshRenderer;
         [SerializeField] private Color color1;
         [SerializeField] private Color color2;
         [SerializeField] private Color color3;
@@ -13,10 +17,12 @@ namespace Player
         public override void OnNetworkSpawn()
         {
             OnSpawnToServerRpc();
+            meshRenderer.material.color = OnChangeColor((int)OwnerClientId);
         }
         
 
         private void Update() {
+            if(!Helper.IsGameSceneLoad) return;
             if(!IsOwner) return;
             var dir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
             dir.Normalize();
@@ -28,36 +34,29 @@ namespace Player
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rot, 720 * Time.deltaTime);
         }
 
+        private Color OnChangeColor(int userNumber)
+        {
+            var tempColor = userNumber switch
+            {
+                1 => color1,
+                2 => color2,
+                3 => color3,
+                4 => color4,
+                _ => color1
+            };
+            return tempColor;
+        }
+        
         [ServerRpc (RequireOwnership = false)]
         private void OnSpawnToServerRpc()
         {
-            ChangeColor();
-            ChangePos();
+            var x = Random.Range(-20, 20);
+            var z = Random.Range(-20, 20);
 
-            return;
-            void ChangePos()
-            {
-                var x = Random.Range(-20, 20);
-                var z = Random.Range(-20, 20);
-
-                var mTransform = transform;
-                mTransform.position = new Vector3(x, mTransform.position.y, z);
-                mTransform.rotation = new Quaternion(0, 180, 0, 0);
-            }
-            void ChangeColor()
-            {
-                var userNumber = OwnerClientId + 1;
-                var tempColor = userNumber switch
-                {
-                    1 => color1,
-                    2 => color2,
-                    3 => color3,
-                    4 => color4,
-                    _ => color1
-                };
-                var component = transform.GetComponentInChildren<Renderer>();
-                component.material.color = tempColor;
-            }
+            var mTransform = transform;
+            mTransform.position = new Vector3(x, mTransform.position.y, z);
+            mTransform.rotation = new Quaternion(0, 180, 0, 0);
+            
         }
         
     }

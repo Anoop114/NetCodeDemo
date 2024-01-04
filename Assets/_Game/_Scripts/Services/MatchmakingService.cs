@@ -57,19 +57,23 @@ public static class MatchmakingService {
         // Create a relay allocation and generate a join code to share with the lobby
         var a = await RelayService.Instance.CreateAllocationAsync(data.MaxPlayers);
         var joinCode = await RelayService.Instance.GetJoinCodeAsync(a.AllocationId);
-
+        
         // Create a lobby, adding the relay join code to the lobby data
-        var options = new CreateLobbyOptions {
-            IsPrivate = !data.Visibility,
-            Password = !data.Visibility ? data.roomPass : "00000000",
+        var optionsWithoutPass = new CreateLobbyOptions {
             Data = new Dictionary<string, DataObject> {
                 { Constants.JoinKey, new DataObject(DataObject.VisibilityOptions.Member, joinCode) }
-                //{ Constants.VisibilityKey, new DataObject(DataObject.VisibilityOptions.Public, "true", DataObject.IndexOptions.N1)},
-                //{ Constants.GameRoomKey, new DataObject(DataObject.VisibilityOptions.Public, data.roomPass, DataObject.IndexOptions.N2) }
+            }
+        };
+        
+        var optionsWithPass = new CreateLobbyOptions {
+            IsPrivate = !data.Visibility,
+            Password =  data.RoomPass,
+            Data = new Dictionary<string, DataObject> {
+                { Constants.JoinKey, new DataObject(DataObject.VisibilityOptions.Member, joinCode) }
             }
         };
 
-        _currentLobby = await Lobbies.Instance.CreateLobbyAsync(data.Name, data.MaxPlayers, options);
+        _currentLobby = await Lobbies.Instance.CreateLobbyAsync(data.Name, data.MaxPlayers, data.Visibility ? optionsWithoutPass : optionsWithPass);
         Transport.SetHostRelayData(a.RelayServer.IpV4, (ushort)a.RelayServer.Port, a.AllocationIdBytes, a.Key, a.ConnectionData);
 
         Heartbeat();
@@ -93,6 +97,17 @@ public static class MatchmakingService {
         }
     }
 
+    public static async Task JoinPrivateLobbyWithAllocation(string lobbyCode,string lobbyPass)
+    {
+        var codeOptions = new JoinLobbyByCodeOptions{Password =lobbyPass};
+        _currentLobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, codeOptions);
+        
+        var a = await RelayService.Instance.JoinAllocationAsync(_currentLobby.Data[Constants.JoinKey].Value);
+
+        Transport.SetClientRelayData(a.RelayServer.IpV4, (ushort)a.RelayServer.Port, a.AllocationIdBytes, a.Key, a.ConnectionData, a.HostConnectionData);
+
+        PeriodicallyRefreshLobby();
+    }
     public static async Task JoinLobbyWithAllocation(string lobbyId) {
         _currentLobby = await Lobbies.Instance.JoinLobbyByIdAsync(lobbyId);
         var a = await RelayService.Instance.JoinAllocationAsync(_currentLobby.Data[Constants.JoinKey].Value);

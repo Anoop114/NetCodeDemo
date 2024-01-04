@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 using TMPro;
 using Unity.Netcode;
 using Unity.Services.Lobbies.Models;
@@ -16,19 +17,20 @@ namespace LobbyManage
         [SerializeField] private LobbyPlayerPanel _playerPanelPrefab;
         [SerializeField] private Transform _playerPanelParent;
         [SerializeField] private TMP_Text _waitingText;
+        [SerializeField] private TMP_Text _lobbyNameText;
+        [SerializeField] private TMP_Text _lobbyCodeText;
         [SerializeField] private GameObject _startButton, _readyButton;
 
         private readonly List<LobbyPlayerPanel> _playerPanels = new();
         private bool _allReady;
         private bool _ready;
-
         public static event Action StartPressed; 
-
+        public static event Action LobbyLeft;
         private void OnEnable() {
             foreach (Transform child in _playerPanelParent) Destroy(child.gameObject);
             _playerPanels.Clear();
 
-            LobbyOrchestrator.LobbyPlayersUpdated += NetworkLobbyPlayersUpdated;
+            LobbyManager.LobbyPlayersUpdated += NetworkLobbyPlayersUpdated;
             MatchmakingService.CurrentLobbyRefreshed += OnCurrentLobbyRefreshed;
             _startButton.SetActive(false);
             _readyButton.SetActive(false);
@@ -37,11 +39,10 @@ namespace LobbyManage
         }
 
         private void OnDisable() {
-            LobbyOrchestrator.LobbyPlayersUpdated -= NetworkLobbyPlayersUpdated;
+            LobbyManager.LobbyPlayersUpdated -= NetworkLobbyPlayersUpdated;
             MatchmakingService.CurrentLobbyRefreshed -= OnCurrentLobbyRefreshed;
         }
 
-        public static event Action LobbyLeft;
 
         public void OnLeaveLobby() {
             LobbyLeft?.Invoke();
@@ -75,8 +76,13 @@ namespace LobbyManage
 
         private void OnCurrentLobbyRefreshed(Lobby lobby) {
             _waitingText.text = $"Waiting on players... {lobby.Players.Count}/{lobby.MaxPlayers}";
+            
+            _lobbyNameText.text = lobby.Name;
+            _lobbyCodeText.text = $"Lobby Code : {lobby.LobbyCode}";
         }
 
+
+        
         public void OnReadyClicked() {
             _readyButton.SetActive(false);
             _ready = true;

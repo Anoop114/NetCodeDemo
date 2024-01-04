@@ -9,7 +9,6 @@ namespace LobbyManage
         public static event Action<LobbyData> LobbyCreated;
         
         [SerializeField] private TMP_InputField _nameInput, _maxPlayersInput, passInput;
-        //[SerializeField] private TMP_Dropdown _typeDropdown, _difficultyDropdown;
         [SerializeField] private Toggle visibility;
         [SerializeField] private Button createLobby;
         private void Start() {
@@ -17,11 +16,11 @@ namespace LobbyManage
             passInput.onValueChanged.AddListener(CharacterLengthCheck);
         }
 
-        private void CharacterLengthCheck(string passLenght)
+        private void CharacterLengthCheck(string passLength)
         {
             if (!visibility.isOn)
             {
-                createLobby.gameObject.SetActive(passLenght.Length >= 8);
+                createLobby.interactable =  passLength.Length >= 8;
             }
         }
 
@@ -30,11 +29,11 @@ namespace LobbyManage
             if (!action)
             {
                 passInput.transform.parent.gameObject.SetActive(true);
-                createLobby.gameObject.SetActive(false);
+                createLobby.interactable = false;
             }
             else
             {
-                createLobby.gameObject.SetActive(true);
+                createLobby.interactable = true;
                 passInput.transform.parent.gameObject.SetActive(false);
                 passInput.text = "";
             }
@@ -46,7 +45,7 @@ namespace LobbyManage
                 Name = _nameInput.text,
                 MaxPlayers = int.Parse(_maxPlayersInput.text),
                 Visibility = visibility.isOn,
-                roomPass = passInput.text
+                RoomPass = passInput.text
             };
 
             LobbyCreated?.Invoke(lobbyData);
@@ -57,6 +56,6 @@ namespace LobbyManage
         public string Name;
         public int MaxPlayers;
         public bool Visibility;
-        public string roomPass;
+        public string RoomPass;
     }
 }
